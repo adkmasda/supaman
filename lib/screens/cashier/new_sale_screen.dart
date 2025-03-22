@@ -32,10 +32,8 @@ class NewSaleScreenState extends State<NewSaleScreen> {
         foregroundColor: Colors.white,
       ),
       body: isSmallScreen
-          // Small screen layout (vertical)
           ? Column(
               children: [
-                // Search and filter bar
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
@@ -52,7 +50,6 @@ class NewSaleScreenState extends State<NewSaleScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Category dropdown
                       SizedBox(
                         width: 120,
                         child: ValueListenableBuilder(
@@ -98,7 +95,6 @@ class NewSaleScreenState extends State<NewSaleScreen> {
                     ],
                   ),
                 ),
-                // Products grid
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -111,16 +107,13 @@ class NewSaleScreenState extends State<NewSaleScreen> {
                 ),
               ],
             )
-          // Large screen layout (horizontal)
           : Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Left side (Products)
                 Expanded(
                   flex: 2,
                   child: Column(
                     children: [
-                      // Search and filter bar
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
@@ -137,7 +130,6 @@ class NewSaleScreenState extends State<NewSaleScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            // Category dropdown
                             SizedBox(
                               width: 200,
                               child: ValueListenableBuilder(
@@ -186,14 +178,12 @@ class NewSaleScreenState extends State<NewSaleScreen> {
                           ],
                         ),
                       ),
-                      // Products grid
                       Expanded(
                         child: _buildProductsGrid(),
                       ),
                     ],
                   ),
                 ),
-                // Right side (Cart)
                 SizedBox(
                   width: 400,
                   child: _buildCartPanel(),
@@ -348,13 +338,10 @@ class NewSaleScreenState extends State<NewSaleScreen> {
         total: total,
         onPaymentComplete: (amountPaid, customerName) {
           final salesBox = Hive.box('sales');
-
-          // Store items before clearing cart
           final saleItems = List<Map<String, dynamic>>.from(cart);
           final saleTotal = total;
           final timestamp = DateTime.now();
 
-          // Save sale
           salesBox.add({
             'timestamp': timestamp.toIso8601String(),
             'cashier': widget.cashierName,
@@ -375,10 +362,8 @@ class NewSaleScreenState extends State<NewSaleScreen> {
             total = 0;
           });
 
-          // Close payment dialog
           Navigator.pop(context);
 
-          // Show receipt alert dialog
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
@@ -447,7 +432,6 @@ class NewSaleScreenState extends State<NewSaleScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Cart header
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -473,7 +457,6 @@ class NewSaleScreenState extends State<NewSaleScreen> {
               ],
             ),
           ),
-          // Cart items
           if (cart.isEmpty)
             const Padding(
               padding: EdgeInsets.all(16),
@@ -541,7 +524,6 @@ class NewSaleScreenState extends State<NewSaleScreen> {
                 },
               ),
             ),
-          // Total and payment button
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
