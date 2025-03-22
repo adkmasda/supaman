@@ -6,13 +6,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
 
-  // Open Hive boxes
   await Hive.openBox('users');
   await Hive.openBox('products');
   await Hive.openBox('sales');
   await Hive.openBox('categories');
 
-  // Initialize default admin user if not exists
   final usersBox = Hive.box('users');
   if (usersBox.isEmpty) {
     await usersBox.put('1', {
@@ -20,7 +18,6 @@ void main() async {
       'password': '1',
       'role': 'admin',
     });
-    // Add default cashier
     await usersBox.put('2', {
       'username': '2',
       'password': '2',
@@ -28,7 +25,6 @@ void main() async {
     });
   }
 
-  // Initialize default categories if not exists
   final categoriesBox = Hive.box('categories');
   if (categoriesBox.isEmpty) {
     final defaultCategories = [
@@ -42,7 +38,6 @@ void main() async {
     }
   }
 
-  // Initialize default products if not exists
   final productsBox = Hive.box('products');
   if (productsBox.isEmpty) {
     await productsBox.add({
