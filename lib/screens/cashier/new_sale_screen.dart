@@ -32,10 +32,8 @@ class NewSaleScreenState extends State<NewSaleScreen> {
         foregroundColor: Colors.white,
       ),
       body: isSmallScreen
-          // Small screen layout (vertical)
           ? Column(
               children: [
-                // Search and filter bar
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
@@ -52,7 +50,6 @@ class NewSaleScreenState extends State<NewSaleScreen> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Category dropdown
                       SizedBox(
                         width: 120,
                         child: ValueListenableBuilder(
@@ -98,7 +95,6 @@ class NewSaleScreenState extends State<NewSaleScreen> {
                     ],
                   ),
                 ),
-                // Products grid
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -111,16 +107,13 @@ class NewSaleScreenState extends State<NewSaleScreen> {
                 ),
               ],
             )
-          // Large screen layout (horizontal)
           : Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Left side (Products)
                 Expanded(
                   flex: 2,
                   child: Column(
                     children: [
-                      // Search and filter bar
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
@@ -137,7 +130,6 @@ class NewSaleScreenState extends State<NewSaleScreen> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            // Category dropdown
                             SizedBox(
                               width: 200,
                               child: ValueListenableBuilder(
@@ -186,14 +178,12 @@ class NewSaleScreenState extends State<NewSaleScreen> {
                           ],
                         ),
                       ),
-                      // Products grid
                       Expanded(
                         child: _buildProductsGrid(),
                       ),
                     ],
                   ),
                 ),
-                // Right side (Cart)
                 SizedBox(
                   width: 400,
                   child: _buildCartPanel(),

@@ -23,7 +23,6 @@ class SalesReportScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Summary Row
                 Row(
                   children: [
                     _buildSummaryCard(
@@ -46,8 +45,6 @@ class SalesReportScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
-
-                // Today's Transactions List
                 const Text(
                   'Today\'s Transactions',
                   style: TextStyle(
