@@ -1,112 +1,173 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../../widgets/dialogs/product_form_dialog.dart';
+import '../../widgets/dialogs/product_dialog.dart';
 
-class ProductsScreen extends StatefulWidget {
+class ProductsScreen extends StatelessWidget {
   const ProductsScreen({super.key});
 
   @override
-  ProductsScreenState createState() => ProductsScreenState();
-}
-
-class ProductsScreenState extends State<ProductsScreen> {
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Products'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showProductForm(context),
-        child: const Icon(Icons.add),
-      ),
-      body: ValueListenableBuilder(
-        valueListenable: Hive.box('products').listenable(),
-        builder: (context, box, _) {
-          if (box.isEmpty) {
-            return const Center(
-              child: Text('No products added yet'),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: box.length,
-            itemBuilder: (context, index) {
-              final product = box.getAt(index);
-              return Card(
-                child: ListTile(
-                  title: Text(product['name']),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Price: ₱${product['price'].toStringAsFixed(2)}',
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Theme.of(context).colorScheme.surface,
+              Theme.of(context).colorScheme.surface,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Products',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
                       ),
-                      Text(
-                        'Category: ${product['category'] ?? 'Uncategorized'}',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 12,
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => Navigator.pop(context),
                         ),
-                      ),
-                    ],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => _showProductForm(context,
-                            index: index, product: product),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => _deleteProduct(context, index),
-                        color: Colors.red,
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
-              );
-            },
-          );
-        },
+              ),
+              Expanded(
+                child: ValueListenableBuilder(
+                  valueListenable: Hive.box('products').listenable(),
+                  builder: (context, box, _) {
+                    if (box.isEmpty) {
+                      return const Center(
+                        child: Text('No products available'),
+                      );
+                    }
+
+                    final products = box.values.toList();
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: products.length,
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ListTile(
+                            title: Text(
+                              product['name'],
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '₱${product['price'].toStringAsFixed(2)}',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () => showDialog(
+                                    context: context,
+                                    builder: (context) => ProductDialog(
+                                      product: product,
+                                      productKey: box.keyAt(index),
+                                    ),
+                                  ),
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () => _showDeleteDialog(
+                                      context, product, index),
+                                  color: Colors.red,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.secondary,
+            ],
+          ),
+        ),
+        child: FloatingActionButton(
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => const ProductDialog(),
+            );
+          },
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
 
-  void _showProductForm(BuildContext context, {int? index, Map? product}) {
-    showDialog(
-      context: context,
-      builder: (context) => ProductFormDialog(
-        index: index,
-        product: product,
-      ),
-    );
-  }
-
-  void _deleteProduct(BuildContext context, int index) {
+  void _showDeleteDialog(
+      BuildContext context, Map<String, dynamic> product, int index) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Product'),
-        content: const Text('Are you sure you want to delete this product?'),
+        content: Text('Are you sure you want to delete ${product['name']}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('CANCEL'),
           ),
           TextButton(
             onPressed: () {
-              final productsBox = Hive.box('products');
-              productsBox.deleteAt(index);
+              Hive.box('products').deleteAt(index);
               Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Product deleted successfully'),
+                ),
+              );
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: const Text('DELETE'),
           ),
         ],
       ),

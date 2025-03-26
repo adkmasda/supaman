@@ -1,199 +1,213 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../../widgets/dialogs/add_category_dialog.dart';
 
-class CategoriesScreen extends StatefulWidget {
+class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
 
   @override
-  CategoriesScreenState createState() => CategoriesScreenState();
-}
-
-class CategoriesScreenState extends State<CategoriesScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  String? _editingId;
-
-  @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 600;
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Categories'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      body: ValueListenableBuilder(
-        valueListenable: Hive.box('categories').listenable(),
-        builder: (context, box, _) {
-          if (box.isEmpty) {
-            return const Center(
-              child: Text('No categories added yet'),
-            );
-          }
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Theme.of(context).colorScheme.surface,
+              Theme.of(context).colorScheme.surface,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Categories',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ValueListenableBuilder(
+                  valueListenable: Hive.box('categories').listenable(),
+                  builder: (context, box, _) {
+                    if (box.isEmpty) {
+                      return const Center(
+                        child: Text('No categories available'),
+                      );
+                    }
 
-          return Padding(
-            padding: EdgeInsets.all(isSmallScreen ? 8.0 : 16.0),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 800),
-                child: ListView.builder(
-                  itemCount: box.length,
-                  itemBuilder: (context, index) {
-                    final category = box.getAt(index);
-                    return Card(
-                      margin: EdgeInsets.symmetric(
-                        vertical: isSmallScreen ? 4 : 8,
-                        horizontal: isSmallScreen ? 4 : 16,
-                      ),
-                      child: ListTile(
-                        title: Text(
-                          category['name'],
-                          style: TextStyle(
-                            fontSize: isSmallScreen ? 14 : 16,
+                    final categories = box.values.toList();
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: categories.length,
+                      itemBuilder: (context, index) {
+                        final category = categories[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                        ),
-                        trailing: Wrap(
-                          spacing: 4,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () =>
-                                  _showCategoryForm(context, category),
-                              iconSize: isSmallScreen ? 20 : 24,
+                          child: ListTile(
+                            title: Text(
+                              category['name'] as String,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () => _deleteCategory(context, index),
-                              color: Colors.red,
-                              iconSize: isSmallScreen ? 20 : 24,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () {
+                                    _showEditCategoryDialog(
+                                        context, category, box.keyAt(index));
+                                  },
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () {
+                                    _showDeleteDialog(context, category, index);
+                                  },
+                                  color: Colors.red,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
               ),
-            ),
-          );
-        },
+            ],
+          ),
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCategoryForm(context),
-        child: Icon(Icons.add, size: isSmallScreen ? 20 : 24),
+      floatingActionButton: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.secondary,
+            ],
+          ),
+        ),
+        child: FloatingActionButton(
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (context) => const AddCategoryDialog(),
+            );
+          },
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
 
-  void _showCategoryForm(BuildContext context, [Map? category]) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 600;
-
-    _nameController.text = category?['name'] ?? '';
-    _editingId = category?['id'];
+  void _showEditCategoryDialog(
+      BuildContext context, dynamic category, dynamic key) {
+    final nameController =
+        TextEditingController(text: category['name'] as String);
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          category == null ? 'Add Category' : 'Edit Category',
-          style: TextStyle(fontSize: isSmallScreen ? 18 : 20),
-        ),
-        content: SizedBox(
-          width: isSmallScreen ? screenWidth * 0.8 : 400,
-          child: Form(
-            key: _formKey,
-            child: TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Category Name',
-                border: OutlineInputBorder(),
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Edit Category'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Category Name',
+                  prefixIcon: Icon(Icons.category),
+                ),
               ),
-              style: TextStyle(fontSize: isSmallScreen ? 14 : 16),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter category name';
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('CANCEL'),
+            ),
+            TextButton(
+              onPressed: () {
+                if (nameController.text.isNotEmpty) {
+                  final categoriesBox = Hive.box('categories');
+                  categoriesBox.put(key, {
+                    'id': category['id'],
+                    'name': nameController.text.trim(),
+                  });
+                  Navigator.pop(context);
                 }
-                return null;
               },
+              child: const Text('SAVE'),
             ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(
-              'Cancel',
-              style: TextStyle(fontSize: isSmallScreen ? 14 : 16),
-            ),
-          ),
-          TextButton(
-            onPressed: _saveCategory,
-            child: Text(
-              category == null ? 'Add' : 'Save',
-              style: TextStyle(fontSize: isSmallScreen ? 14 : 16),
-            ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 
-  void _saveCategory() {
-    if (_formKey.currentState!.validate()) {
-      final categoriesBox = Hive.box('categories');
-      final categoryData = {
-        'id': _editingId ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        'name': _nameController.text.trim(),
-      };
-
-      if (_editingId != null) {
-        final index = categoriesBox.values
-            .toList()
-            .indexWhere((c) => c['id'] == _editingId);
-        if (index != -1) {
-          categoriesBox.putAt(index, categoryData);
-        }
-      } else {
-        categoriesBox.add(categoryData);
-      }
-
-      Navigator.pop(context);
-      _nameController.clear();
-      _editingId = null;
-    }
-  }
-
-  void _deleteCategory(BuildContext context, int index) {
+  void _showDeleteDialog(
+      BuildContext context, Map<dynamic, dynamic> category, int index) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Category'),
-        content: const Text('Are you sure you want to delete this category?'),
+        content: Text('Are you sure you want to delete ${category['name']}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('CANCEL'),
           ),
           TextButton(
             onPressed: () {
-              final categoriesBox = Hive.box('categories');
-              categoriesBox.deleteAt(index);
+              Hive.box('categories').deleteAt(index);
               Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Category deleted successfully'),
+                ),
+              );
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: const Text('DELETE'),
           ),
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
   }
 }
